@@ -1682,7 +1682,9 @@ async function init() {
   if (startCode && !userData.referredBy && startCode !== userData.referralCode) {
     document.getElementById('ref-code-input').value = startCode;
     switchTab('referral', document.querySelector('.tab-btn.ref-tab'));
-    await applyRefCode(startCode, true);
+    // Small delay ensures Firestore write for new users is fully committed before querying
+    await new Promise(r => setTimeout(r, 500));
+    await applyRefCode(startCode, false);
   }
 }
 
@@ -1810,6 +1812,10 @@ function renderAll() {
     refUsed.innerHTML = `<div class="ref-used-badge">${t.ref_used_prefix}${userData.referredBy}</div>`;
     document.getElementById('ref-code-input').disabled = true;
     document.getElementById('ref-submit-btn').disabled = true;
+  } else {
+    refUsed.innerHTML = '';
+    document.getElementById('ref-code-input').disabled = false;
+    document.getElementById('ref-submit-btn').disabled = false;
   }
 
   renderMilestones();
