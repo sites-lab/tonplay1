@@ -1637,6 +1637,7 @@ function showPaySuccess(text) {
 const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
+tg?.disableVerticalSwipes?.();
 
 async function sendBotMessage(text) {
   try {
@@ -1682,7 +1683,6 @@ async function init() {
   if (startCode && !userData.referredBy && startCode !== userData.referralCode) {
     document.getElementById('ref-code-input').value = startCode;
     switchTab('referral', document.querySelector('.tab-btn.ref-tab'));
-    // Small delay ensures Firestore write for new users is fully committed before querying
     await new Promise(r => setTimeout(r, 500));
     await applyRefCode(startCode, false);
   }
