@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TonPlay Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#F0F4FF;--surf:#FFFFFF;--card:#FFFFFF;--card2:#F7F9FF;
+  --ton:#2196F3;--ton2:#1565C0;--ton-light:#E3F0FF;
+  --gold:#F59E0B;--gold2:#D97706;--gold-light:#FEF3C7;
+  --green:#10B981;--green-light:#D1FAE5;
+  --red:#EF4444;--red-light:#FEE2E2;
+  --purple:#7C3AED;--purple-light:#EDE9FE;
+  --text:#0F172A;--sub:#64748B;--muted:#94A3B8;--border:#E2E8F0;
+  --shadow:0 1px 3px rgba(0,0,0,0.06),0 4px 12px rgba(0,0,0,0.04);
+  --r:14px;--r-sm:9px;
+}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden;}
+
+/* Login */
+#login-screen{position:fixed;inset:0;background:var(--bg);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;}
+#login-screen.gone{display:none;}
+.login-box{background:var(--surf);border:1px solid var(--border);border-radius:24px;padding:36px 32px;width:100%;max-width:380px;text-align:center;box-shadow:var(--shadow);}
+.login-logo{display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px;}
+.login-logo-icon{width:44px;height:44px;background:linear-gradient(135deg,#2196F3,#1565C0);border-radius:14px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(33,150,243,0.3);}
+.login-logo-name{font-size:22px;font-weight:900;}.login-logo-name span{color:var(--ton);}
+.login-title{font-size:18px;font-weight:800;margin-bottom:6px;}
+.login-sub{font-size:12px;color:var(--sub);margin-bottom:24px;}
+.lf{margin-bottom:14px;text-align:left;}
+.ll{font-size:11px;color:var(--sub);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-bottom:5px;display:block;}
+.li{width:100%;padding:12px 14px;background:var(--card2);border:1.5px solid var(--border);border-radius:11px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;transition:border-color .2s;}
+.li:focus{border-color:var(--ton);box-shadow:0 0 0 3px rgba(33,150,243,0.1);}
+.li::placeholder{color:var(--muted);}
+.btn-login{width:100%;padding:13px;background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;border:none;border-radius:12px;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;margin-top:4px;box-shadow:0 4px 16px rgba(33,150,243,0.25);transition:all .18s;}
+.btn-login:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(33,150,243,0.35);}
+.btn-login:active{transform:scale(0.98);}
+.login-err{font-size:11px;color:var(--red);margin-top:10px;min-height:16px;}
+
+/* App */
+#admin-app{display:none;min-height:100vh;}
+#admin-app.visible{display:block;}
+.topbar{background:var(--surf);border-bottom:1px solid var(--border);padding:14px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;box-shadow:var(--shadow);}
+.tb-logo{display:flex;align-items:center;gap:10px;}
+.tb-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--ton),var(--ton2));border-radius:10px;display:flex;align-items:center;justify-content:center;}
+.tb-logo-icon svg{width:18px;height:18px;}
+.tb-logo-name{font-size:16px;font-weight:900;}.tb-logo-name span{color:var(--ton);}
+.tb-badge{background:var(--red-light);border:1px solid rgba(239,68,68,0.25);color:var(--red);font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;}
+.btn-logout{padding:7px 16px;background:var(--red-light);border:1px solid rgba(239,68,68,0.25);color:var(--red);border-radius:9px;font-family:'Inter',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .16s;}
+.btn-logout:hover{background:rgba(239,68,68,0.15);}
+.main{max-width:1100px;margin:0 auto;padding:24px 20px 40px;}
+
+/* Summary */
+.summary-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px;}
+@media(max-width:700px){.summary-row{grid-template-columns:repeat(2,1fr);}}
+.sum-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px;box-shadow:var(--shadow);}
+.sum-icon{font-size:22px;margin-bottom:8px;}
+.sum-val{font-family:'DM Mono',monospace;font-size:26px;font-weight:500;line-height:1.1;}
+.sum-val.blue{color:var(--ton);}.sum-val.gold{color:var(--gold2);}.sum-val.green{color:var(--green);}.sum-val.purple{color:var(--purple);}
+.sum-lbl{font-size:10px;color:var(--sub);margin-top:4px;font-weight:700;letter-spacing:.3px;}
+
+/* Tabs */
+.admin-tabs{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap;}
+.atab{padding:9px 18px;border-radius:10px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .16s;border:1.5px solid var(--border);background:var(--surf);color:var(--sub);}
+.atab.active{background:var(--ton-light);border-color:rgba(33,150,243,0.35);color:var(--ton);}
+.atab-content{display:none;}
+.atab-content.active{display:block;}
+
+/* Panel */
+.panel{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);margin-bottom:20px;overflow:hidden;box-shadow:var(--shadow);}
+.panel-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.panel-title{font-size:13px;font-weight:800;}
+.search-bar{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;gap:8px;}
+.search-input{flex:1;padding:9px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'Inter',sans-serif;font-size:12px;outline:none;}
+.search-input:focus{border-color:var(--ton);}
+.search-input::placeholder{color:var(--muted);}
+.btn-refresh{padding:9px 16px;background:var(--ton-light);border:1.5px solid rgba(33,150,243,0.25);color:var(--ton);border-radius:9px;font-family:'Inter',sans-serif;font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .16s;}
+.btn-refresh:hover{background:rgba(33,150,243,0.15);}
+.tbl-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:11px;}
+th{padding:10px 14px;text-align:left;color:var(--sub);font-weight:700;letter-spacing:.4px;text-transform:uppercase;background:var(--card2);white-space:nowrap;}
+td{padding:11px 14px;border-top:1px solid var(--border);vertical-align:middle;white-space:nowrap;}
+tr:hover td{background:rgba(33,150,243,0.02);}
+.mono{font-family:'DM Mono',monospace;}
+
+/* Chips */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.chip.blue{background:var(--ton-light);color:var(--ton);}
+.chip.green{background:var(--green-light);color:var(--green);}
+.chip.gold{background:var(--gold-light);color:var(--gold2);}
+.chip.red{background:var(--red-light);color:var(--red);}
+.chip.purple{background:var(--purple-light);color:var(--purple);}
+.chip.locked{background:var(--red-light);color:var(--red);}
+.chip.unlocked{background:var(--green-light);color:var(--green);}
+.chip.pending{background:var(--gold-light);color:var(--gold2);}
+.chip.done{background:var(--green-light);color:var(--green);}
+
+/* Action buttons */
+.act-grp{display:flex;gap:5px;flex-wrap:wrap;}
+.btn-act{padding:5px 10px;border-radius:7px;font-family:'Inter',sans-serif;font-size:10px;font-weight:700;cursor:pointer;transition:all .14s;white-space:nowrap;border:1.5px solid;}
+.btn-act:active{transform:scale(0.96);}
+.btn-act.blue{background:var(--ton-light);border-color:rgba(33,150,243,0.3);color:var(--ton);}
+.btn-act.blue:hover{background:rgba(33,150,243,0.15);}
+.btn-act.gold{background:var(--gold-light);border-color:rgba(245,158,11,0.3);color:var(--gold2);}
+.btn-act.gold:hover{background:rgba(245,158,11,0.15);}
+.btn-act.green{background:var(--green-light);border-color:rgba(16,185,129,0.28);color:var(--green);}
+.btn-act.green:hover{background:rgba(16,185,129,0.15);}
+.btn-act.red{background:var(--red-light);border-color:rgba(239,68,68,0.22);color:var(--red);}
+.btn-act.red:hover{background:rgba(239,68,68,0.15);}
+.btn-act.purple{background:var(--purple-light);border-color:rgba(124,58,237,0.25);color:var(--purple);}
+
+/* Notif rows */
+.notif-list{padding:0;}
+.notif-row{display:flex;align-items:flex-start;justify-content:space-between;padding:14px 18px;border-bottom:1px solid var(--border);gap:12px;}
+.notif-row:last-child{border:none;}
+.notif-info{flex:1;min-width:0;}
+.notif-user{font-size:12px;font-weight:800;}
+.notif-sub{font-size:10px;color:var(--sub);margin-top:3px;}
+.notif-addr{font-family:'DM Mono',monospace;font-size:10px;color:var(--ton);word-break:break-all;max-width:220px;white-space:normal;margin-top:3px;}
+.notif-actions{display:flex;gap:6px;flex-shrink:0;align-items:flex-start;}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.35);z-index:200;display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s;backdrop-filter:blur(4px);}
+.modal-bg.open{opacity:1;pointer-events:all;}
+.modal{background:var(--surf);border:1px solid var(--border);border-radius:20px;padding:26px 22px;width:100%;max-width:420px;position:relative;box-shadow:var(--shadow);}
+.modal-title{font-size:15px;font-weight:800;margin-bottom:14px;}
+.modal-field{margin-bottom:12px;}
+.modal-label{font-size:10px;color:var(--sub);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px;display:block;}
+.modal-input{width:100%;padding:10px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'DM Mono',monospace;font-size:12px;outline:none;transition:border-color .2s;}
+.modal-input:focus{border-color:var(--ton);}
+.modal-btns{display:flex;gap:8px;margin-top:14px;}
+.btn-modal{flex:1;padding:11px;border-radius:10px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .16s;}
+.btn-modal.confirm{background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;border:none;box-shadow:0 3px 10px rgba(33,150,243,0.2);}
+.btn-modal.cancel{background:var(--card2);color:var(--sub);border:1.5px solid var(--border);}
+.btn-modal:active{transform:scale(0.97);}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--text);color:#fff;padding:10px 20px;border-radius:20px;font-size:12px;font-weight:600;opacity:0;pointer-events:none;transition:all .25s;white-space:nowrap;z-index:999;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* Empty state */
+.empty-state{text-align:center;padding:36px 20px;color:var(--sub);font-size:12px;}
+.empty-state .emoji{font-size:32px;margin-bottom:8px;}
+.spinner{width:20px;height:20px;border:2px solid rgba(33,150,243,0.2);border-top-color:var(--ton);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Settings inputs */
+.settings-section{max-width:560px;}
+.set-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.set-label{font-size:10px;color:var(--sub);font-weight:700;letter-spacing:.4px;text-transform:uppercase;margin-bottom:5px;display:block;}
+.set-input{width:100%;padding:10px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Mono',monospace;font-size:13px;outline:none;transition:border-color .2s;}
+.set-input:focus{border-color:var(--ton);}
+.ms-card{background:var(--card2);border:1.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;transition:border-color .15s,box-shadow .15s;}
+.ms-card:hover{border-color:rgba(33,150,243,0.3);}
+.ms-card.drag-over{border-color:var(--ton);box-shadow:0 0 0 2px rgba(33,150,243,0.15);background:var(--ton-light);}
+.ms-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;align-items:end;}
+.btn-save{padding:11px 24px;background:linear-gradient(135deg,var(--ton),var(--ton2));color:#fff;border:none;border-radius:10px;font-family:'Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 3px 10px rgba(33,150,243,0.2);transition:all .15s;}
+.btn-save:hover{transform:translateY(-1px);}
+.btn-save:active{transform:scale(0.97);}
+.btn-add-ms{padding:9px 18px;background:var(--ton-light);border:1.5px solid rgba(33,150,243,0.25);color:var(--ton);border-radius:9px;font-family:'Inter',sans-serif;font-size:11px;font-weight:700;cursor:pointer;}
+.status-msg{font-size:11px;color:var(--green);min-height:16px;margin-top:8px;}
+.sec-title{font-size:11px;font-weight:800;color:var(--sub);letter-spacing:.8px;text-transform:uppercase;margin-bottom:12px;}
+
+/* Add player form */
+.add-player-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+@media(max-width:600px){.add-player-grid{grid-template-columns:1fr;}}
+
+/* Wallet badge */
+.wallet-cell{font-family:'DM Mono',monospace;font-size:10px;color:var(--ton);max-width:150px;overflow:hidden;text-overflow:ellipsis;cursor:pointer;}
+
+/* Leaderboard */
+.leaderboard{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;}
+@media(max-width:600px){.leaderboard{grid-template-columns:1fr;}}
+.lb-card{background:var(--surf);border:1px solid var(--border);border-radius:var(--r);padding:14px 16px;box-shadow:var(--shadow);position:relative;overflow:hidden;}
+.lb-card.gold-card{border-color:rgba(245,158,11,0.4);background:linear-gradient(135deg,#fffbeb,#fff);}
+.lb-card.blue-card{border-color:rgba(33,150,243,0.35);background:linear-gradient(135deg,#eff8ff,#fff);}
+.lb-card.green-card{border-color:rgba(16,185,129,0.35);background:linear-gradient(135deg,#f0fdf9,#fff);}
+.lb-crown{font-size:22px;margin-bottom:6px;display:block;}
+.lb-title{font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--sub);margin-bottom:8px;}
+.lb-name{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:2px;}
+.lb-val{font-family:'DM Mono',monospace;font-size:20px;font-weight:600;line-height:1.1;}
+.lb-val.gold-txt{color:var(--gold2);}
+.lb-val.blue-txt{color:var(--ton);}
+.lb-val.green-txt{color:var(--green);}
+.lb-sub{font-size:10px;color:var(--sub);margin-top:2px;}
+
+/* DM modal textarea */
+.dm-textarea{width:100%;min-height:100px;padding:10px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:9px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;transition:border-color .2s;}
+.dm-textarea:focus{border-color:var(--ton);}
+</style>
+</head>
+<body>
+
+<!-- Login -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-logo-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6L12 2z" fill="white"/></svg></div>
+      <div class="login-logo-name">Ton<span>Play</span></div>
+    </div>
+    <div class="login-title">🔐 Admin Panel</div>
+    <div class="login-sub">Sign in with your admin credentials</div>
+    <div class="lf"><label class="ll">Email</label><input class="li" type="email" id="login-email" placeholder="admin@example.com" autocomplete="email"></div>
+    <div class="lf"><label class="ll">Password</label><input class="li" type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"></div>
+    <button class="btn-login" id="login-btn">Sign In</button>
+    <div class="login-err" id="login-err"></div>
+  </div>
+</div>
+
+<!-- App -->
+<div id="admin-app">
+  <div class="topbar">
+    <div class="tb-logo">
+      <div class="tb-logo-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2L4 6v6c0 5.25 3.5 10.15 8 11.5C16.5 22.15 20 17.25 20 12V6L12 2z"/></svg></div>
+      <div class="tb-logo-name">Ton<span>Play</span></div>
+      <div class="tb-badge">ADMIN</div>
+    </div>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
+  </div>
+
+  <div class="main">
+    <!-- Summary -->
+    <div class="summary-row">
+      <div class="sum-card"><div class="sum-icon">👥</div><div class="sum-val blue" id="s-players">0</div><div class="sum-lbl">Total Players</div></div>
+      <div class="sum-card"><div class="sum-icon">💰</div><div class="sum-val gold" id="s-deposits">0</div><div class="sum-lbl">Pending Deposits</div></div>
+      <div class="sum-card"><div class="sum-icon">💸</div><div class="sum-val green" id="s-withdrawals">0</div><div class="sum-lbl">Pending Withdrawals</div></div>
+      <div class="sum-card"><div class="sum-icon">📈</div><div class="sum-val purple" id="s-total-bal">0</div><div class="sum-lbl">Total Balance (TON)</div></div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs">
+      <button class="atab active" data-tab="players" onclick="switchAdminTab('players',this)">👥 Players</button>
+      <button class="atab" data-tab="deposits" onclick="switchAdminTab('deposits',this)">💰 Deposits</button>
+      <button class="atab" data-tab="withdrawals" onclick="switchAdminTab('withdrawals',this)">💸 Withdrawals</button>
+      <button class="atab" data-tab="settings" onclick="switchAdminTab('settings',this)">⚙️ Settings</button>
+      <button class="atab" data-tab="addplayer" onclick="switchAdminTab('addplayer',this)">➕ Add Player</button>
+      <button class="atab" data-tab="broadcast" onclick="switchAdminTab('broadcast',this)">📢 Broadcast</button>
+    </div>
+
+    <!-- PLAYERS -->
+    <div class="atab-content active" id="tab-players">
+
+      <!-- Leaderboard -->
+      <div class="leaderboard" id="leaderboard-row">
+        <div class="lb-card gold-card">
+          <span class="lb-crown">👑</span>
+          <div class="lb-title">Top Referrer</div>
+          <div class="lb-name" id="lb-ref-name">—</div>
+          <div class="lb-val gold-txt" id="lb-ref-val">0</div>
+          <div class="lb-sub">referrals</div>
+        </div>
+        <div class="lb-card blue-card">
+          <span class="lb-crown">💎</span>
+          <div class="lb-title">Highest Balance</div>
+          <div class="lb-name" id="lb-bal-name">—</div>
+          <div class="lb-val blue-txt" id="lb-bal-val">0</div>
+          <div class="lb-sub">TON balance</div>
+        </div>
+        <div class="lb-card green-card">
+          <span class="lb-crown">🚀</span>
+          <div class="lb-title">Most Deposited</div>
+          <div class="lb-name" id="lb-dep-name">—</div>
+          <div class="lb-val green-txt" id="lb-dep-val">0</div>
+          <div class="lb-sub">TON deposited</div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Players</div></div>
+        <div class="search-bar">
+          <input class="search-input" id="player-search" placeholder="Search by name, username or ID…" oninput="filterPlayers()">
+          <button class="btn-refresh" id="refresh-players">🔄 Refresh</button>
+        </div>
+        <div class="tbl-wrap">
+          <table>
+            <thead><tr>
+              <th>Name / Username</th>
+              <th>ID</th>
+              <th>Balance (TON)</th>
+              <th>Deposited</th>
+              <th>Wallet</th>
+              <th>Refs</th>
+              <th>Withdraw</th>
+              <th>Actions</th>
+            </tr></thead>
+            <tbody id="players-tbody"><tr><td colspan="8" class="empty-state">Loading…</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEPOSITS -->
+    <div class="atab-content" id="tab-deposits">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Deposit Requests</div><button class="btn-refresh" id="refresh-deposits">🔄 Refresh</button></div>
+        <div class="notif-list" id="deposit-list"><div class="empty-state"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- WITHDRAWALS -->
+    <div class="atab-content" id="tab-withdrawals">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">Withdrawal Requests</div><button class="btn-refresh" id="refresh-withdrawals">🔄 Refresh</button></div>
+        <div class="notif-list" id="withdrawal-list"><div class="empty-state"><div class="spinner"></div></div></div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="atab-content" id="tab-settings">
+      <div class="panel">
+        <div class="panel-head"><div class="panel-title">⚙️ Global Settings</div></div>
+        <div style="padding:20px;">
+          <div class="settings-section">
+            <div class="sec-title">💰 Referral Bonus</div>
+            <div style="margin-bottom:16px;">
+              <label class="set-label">TON per invited friend</label>
+              <input class="set-input" type="number" id="ref-bonus-ton" step="0.001" min="0" value="0.05" placeholder="0.05" style="max-width:180px;">
+              <div style="font-size:10px;color:var(--sub);margin-top:4px;">Credited instantly to the referrer when someone uses their code.</div>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;">
+            <div class="sec-title">⭐ Referral Milestones</div>
+            <div style="font-size:11px;color:var(--sub);margin-bottom:14px;line-height:1.6;">Configure TG Stars rewards for reaching friend milestones. The last milestone can also include a TON bonus.</div>
+
+            <div id="ref-milestones-editor" style="margin-bottom:12px;"></div>
+            <div style="display:flex;gap:8px;margin-bottom:16px;">
+              <button class="btn-add-ms" onclick="addMilestone()">+ Add Milestone</button>
+            </div>
+
+            <hr style="border:none;border-top:1px solid var(--border);margin:20px 0;">
+            <div class="sec-title">📈 Weekly Yield Rate</div>
+            <div style="margin-bottom:16px;">
+              <label class="set-label">Yield % per week</label>
+              <input class="set-input" type="number" id="yield-rate" step="0.1" min="0" max="100" value="5" placeholder="5" style="max-width:180px;">
+              <div style="font-size:10px;color:var(--sub);margin-top:4px;">Default: 10%. Shown to users as weekly return.</div>
+            </div>
+
+            <button class="btn-save" onclick="saveSettings()">💾 Save All Settings</button>
+            <div class="status-msg" id="settings-msg"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BROADCAST -->
+    <div class="atab-content" id="tab-broadcast">
+      <div class="panel" style="max-width:620px;">
+        <div class="panel-head"><div class="panel-title">📢 Broadcast to All Users</div></div>
+        <div style="padding:20px;">
+          <div style="font-size:11px;color:var(--sub);margin-bottom:16px;line-height:1.6;">Send a message (with optional photo) to all users who have a Telegram ID saved in Firestore.</div>
+
+          <div style="margin-bottom:14px;">
+            <label class="set-label">📷 Photo (optional)</label>
+            <input type="file" id="bc-photo" accept="image/*" style="display:none;" onchange="handleBcPhoto(this)">
+            <div id="bc-photo-preview" onclick="document.getElementById('bc-photo').click()" style="width:100%;height:120px;background:var(--card2);border:2px dashed var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:12px;color:var(--sub);overflow:hidden;transition:border-color .2s;" onmouseover="this.style.borderColor='var(--ton)'" onmouseout="this.style.borderColor='var(--border)'">
+              <span id="bc-photo-label">🖼️ Click to select a photo</span>
+              <img id="bc-photo-img" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:10px;">
+            </div>
+            <div style="display:flex;gap:8px;margin-top:6px;">
+              <button class="btn-act red" id="bc-remove-photo" style="display:none;" onclick="removeBcPhoto()">✕ Remove photo</button>
+            </div>
+          </div>
+
+          <div style="margin-bottom:14px;">
+            <label class="set-label">🇬🇧 English Message *</label>
+            <textarea id="bc-text-en" placeholder="Write English message here…\nHTML supported: &lt;b&gt;bold&lt;/b&gt;, &lt;i&gt;italic&lt;/i&gt;" style="width:100%;min-height:90px;padding:11px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;transition:border-color .2s;" onfocus="this.style.borderColor='var(--ton)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+          </div>
+
+          <div style="margin-bottom:14px;">
+            <label class="set-label">🇷🇺 Russian Message</label>
+            <textarea id="bc-text-ru" placeholder="Напишите сообщение на русском…\nПоддерживается HTML: &lt;b&gt;жирный&lt;/b&gt;, &lt;i&gt;курсив&lt;/i&gt;" style="width:100%;min-height:90px;padding:11px 13px;background:var(--card2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;outline:none;resize:vertical;transition:border-color .2s;" onfocus="this.style.borderColor='var(--ton)'" onblur="this.style.borderColor='var(--border)'"></textarea>
+            <div style="font-size:10px;color:var(--sub);margin-top:4px;">If left empty, English message will be sent to all users regardless of language.</div>
+          </div>
+
+          <div style="background:var(--gold-light);border:1.5px solid rgba(245,158,11,0.25);border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:11px;color:var(--gold2);line-height:1.6;">
+            ⚠️ This will send the message to <strong id="bc-user-count">…</strong> users. Only users who have ever started the bot will receive it.
+          </div>
+
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <button class="btn-save" id="bc-send-btn" onclick="sendBroadcast()">📢 Send Broadcast</button>
+            <button class="btn-act blue" onclick="loadBroadcastCount()">🔄 Refresh count</button>
+          </div>
+
+          <div id="bc-progress" style="margin-top:14px;display:none;">
+            <div style="font-size:12px;font-weight:700;margin-bottom:6px;" id="bc-progress-label">Sending…</div>
+            <div style="background:var(--border);border-radius:20px;height:8px;overflow:hidden;">
+              <div id="bc-progress-bar" style="height:100%;background:linear-gradient(90deg,var(--ton),var(--ton2));border-radius:20px;width:0%;transition:width .3s;"></div>
+            </div>
+            <div style="font-size:10px;color:var(--sub);margin-top:5px;" id="bc-progress-detail"></div>
+          </div>
+
+          <div id="bc-result" style="margin-top:12px;font-size:12px;min-height:16px;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADD PLAYER -->
+    <div class="atab-content" id="tab-addplayer">
+      <div class="panel" style="max-width:580px;">
+        <div class="panel-head"><div class="panel-title">➕ Add Player Manually</div></div>
+        <div style="padding:20px;">
+          <div class="add-player-grid">
+            <div>
+              <label class="set-label">Telegram User ID *</label>
+              <input class="set-input" id="np-userid" type="text" placeholder="e.g. 123456789">
+            </div>
+            <div>
+              <label class="set-label">Username *</label>
+              <input class="set-input" id="np-username" type="text" placeholder="e.g. johndoe">
+            </div>
+            <div>
+              <label class="set-label">Display Name</label>
+              <input class="set-input" id="np-displayname" type="text" placeholder="e.g. John Doe">
+            </div>
+            <div>
+              <label class="set-label">Balance (TON)</label>
+              <input class="set-input" id="np-balance" type="number" step="0.01" value="0" placeholder="0">
+            </div>
+            <div>
+              <label class="set-label">Total Deposited (TON)</label>
+              <input class="set-input" id="np-deposited" type="number" step="0.01" value="0" placeholder="0">
+            </div>
+            <div>
+              <label class="set-label">Wallet Address</label>
+              <input class="set-input" id="np-wallet" type="text" placeholder="EQ...">
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <label class="set-label" style="margin:0;">Withdrawals Unlocked:</label>
+            <button id="np-wd-toggle" onclick="toggleNpWd()" style="padding:6px 14px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;background:var(--red-light);border:1.5px solid rgba(239,68,68,0.25);color:var(--red);font-family:'Inter',sans-serif;">🔒 Locked</button>
+          </div>
+          <button class="btn-save" onclick="createNewPlayer()">✅ Create Player</button>
+          <div class="status-msg" id="np-error"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Modal -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-title" id="modal-title"></div>
+    <div id="modal-body"></div>
+    <div class="modal-btns">
+      <button class="btn-modal cancel" id="modal-cancel">Cancel</button>
+      <button class="btn-modal confirm" id="modal-confirm">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, collection, addDoc, getDocs, query, orderBy, limit, where, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAml8c0QPKlbEmXG7C4eXd-WYbbOvOHtP8",
+  authDomain: "miniapp-ton.firebaseapp.com",
+  projectId: "miniapp-ton",
+  storageBucket: "miniapp-ton.firebasestorage.app",
+  messagingSenderId: "991105630391",
+  appId: "1:991105630791:web:551166c522317fad980d32"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// ── Auth ──
+document.getElementById('login-btn').addEventListener('click', async () => {
+  const email = document.getElementById('login-email').value.trim();
+  const pass = document.getElementById('login-password').value;
+  const err = document.getElementById('login-err');
+  err.textContent = '';
+  try {
+    await signInWithEmailAndPassword(auth, email, pass);
+  } catch(e) { err.textContent = '❌ ' + (e.code === 'auth/invalid-credential' ? 'Wrong email or password' : e.message); }
+});
+
+document.getElementById('login-password').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('login-btn').click(); });
+
+window.logout = function() { signOut(auth); };
+
+onAuthStateChanged(auth, user => {
+  if (user) {
+    document.getElementById('login-screen').classList.add('gone');
+    document.getElementById('admin-app').classList.add('visible');
+    loadAll();
+  } else {
+    document.getElementById('login-screen').classList.remove('gone');
+    document.getElementById('admin-app').classList.remove('visible');
+  }
+});
+
+function loadAll() {
+  loadPlayers();
+  loadDeposits();
+  loadWithdrawals();
+  loadSettings();
+}
+
+// ── Players ──
+let allPlayers = [];
+
+async function loadPlayers() {
+  document.getElementById('players-tbody').innerHTML = '<tr><td colspan="8" class="empty-state"><div class="spinner"></div></td></tr>';
+  try {
+    const snap = await getDocs(query(collection(db, 'users'), orderBy('createdAt', 'desc'), limit(200)));
+    allPlayers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderPlayers(allPlayers);
+    renderLeaderboard(allPlayers);
+    updateSummary();
+  } catch(e) { document.getElementById('players-tbody').innerHTML = `<tr><td colspan="8" style="color:var(--red);padding:14px;">${e.message}</td></tr>`; }
+}
+
+function renderLeaderboard(list) {
+  if (!list.length) return;
+  // Top referrer
+  const topRef = [...list].sort((a,b) => (b.referralCount||0) - (a.referralCount||0))[0];
+  document.getElementById('lb-ref-name').textContent = topRef.displayName || ('@' + (topRef.userName || topRef.id));
+  document.getElementById('lb-ref-val').textContent = topRef.referralCount || 0;
+  // Highest balance
+  const topBal = [...list].sort((a,b) => (b.balance||0) - (a.balance||0))[0];
+  document.getElementById('lb-bal-name').textContent = topBal.displayName || ('@' + (topBal.userName || topBal.id));
+  document.getElementById('lb-bal-val').textContent = (topBal.balance||0).toFixed(2);
+  // Most deposited
+  const topDep = [...list].sort((a,b) => (b.totalDeposited||0) - (a.totalDeposited||0))[0];
+  document.getElementById('lb-dep-name').textContent = topDep.displayName || ('@' + (topDep.userName || topDep.id));
+  document.getElementById('lb-dep-val').textContent = (topDep.totalDeposited||0).toFixed(2);
+}
+
+function renderPlayers(list) {
+  const tb = document.getElementById('players-tbody');
+  if (!list.length) { tb.innerHTML = '<tr><td colspan="8" class="empty-state">No players found</td></tr>'; return; }
+  tb.innerHTML = list.map(p => {
+    const name = p.displayName || (p.userName ? '@' + p.userName : p.id);
+    const bal = (p.balance || 0).toFixed(2);
+    const dep = (p.totalDeposited || 0).toFixed(2);
+    const wallet = p.walletAddress ? `<span class="wallet-cell" title="${p.walletAddress}" onclick="navigator.clipboard?.writeText('${p.walletAddress}')">${p.walletAddress.slice(0,12)}…</span>` : '<span style="color:var(--muted);">—</span>';
+    const wdChip = p.withdrawUnlocked ? '<span class="chip unlocked">🔓 Open</span>' : '<span class="chip locked">🔒 Locked</span>';
+    return `<tr>
+      <td><div style="font-weight:700;">${name}</div><div style="font-size:10px;color:var(--sub);">@${p.userName || '—'}</div></td>
+      <td class="mono" style="font-size:10px;">${p.userId || p.id}</td>
+      <td><span class="mono" style="color:var(--ton);font-weight:600;">${bal} TON</span></td>
+      <td class="mono">${dep} TON</td>
+      <td>${wallet}</td>
+      <td class="mono">${p.referralCount || 0}</td>
+      <td>${wdChip}</td>
+      <td><div class="act-grp">
+        <button class="btn-act blue" onclick="editBalance('${p.id}','${p.userName||p.id}',${p.balance||0})">✏️ Balance</button>
+        <button class="btn-act green" onclick="addDeposit('${p.id}','${p.userName||p.id}')">💰 Add Deposit</button>
+        <button class="btn-act ${p.withdrawUnlocked?'red':'green'}" onclick="toggleWithdraw('${p.id}','${p.userName||p.id}',${!!p.withdrawUnlocked})">${p.withdrawUnlocked?'🔒 Lock':'🔓 Unlock'}</button>
+        <button class="btn-act purple" onclick="openDM('${p.id}','${p.userName||p.id}')">📨 DM</button>
+        <button class="btn-act red" onclick="deletePlayer('${p.id}','${p.userName||p.id}')">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+function filterPlayers() {
+  const q = document.getElementById('player-search').value.toLowerCase();
+  if (!q) { renderPlayers(allPlayers); return; }
+  renderPlayers(allPlayers.filter(p =>
+    (p.displayName || '').toLowerCase().includes(q) ||
+    (p.userName || '').toLowerCase().includes(q) ||
+    (p.userId || p.id || '').toLowerCase().includes(q)
+  ));
+}
+window.filterPlayers = filterPlayers;
+
+function updateSummary() {
+  document.getElementById('s-players').textContent = allPlayers.length;
+  const totalBal = allPlayers.reduce((s, p) => s + (p.balance || 0), 0);
+  document.getElementById('s-total-bal').textContent = totalBal.toFixed(1);
+}
+
+// ── Deposits ──
+let depositDocs = [];
+async function loadDeposits() {
+  const list = document.getElementById('deposit-list');
+  list.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+  try {
+    const snap = await getDocs(query(collection(db, 'depositNotifications'), orderBy('timestamp', 'desc'), limit(100)));
+    depositDocs = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    renderDeposits();
+    document.getElementById('s-deposits').textContent = depositDocs.filter(d => d.status !== 'done').length;
+  } catch(e) { list.innerHTML = `<div class="empty-state"><div style="color:var(--red);">${e.message}</div></div>`; }
+}
+
+function renderDeposits() {
+  const list = document.getElementById('deposit-list');
+  if (!depositDocs.length) { list.innerHTML = '<div class="empty-state"><div class="emoji">✅</div>No deposit requests</div>'; return; }
+  list.innerHTML = depositDocs.map(d => {
+    const ts = d.timestamp?.toDate ? d.timestamp.toDate().toLocaleString() : '—';
+    const statusChip = d.status === 'done' ? '<span class="chip done">✅ Confirmed</span>' : '<span class="chip pending">⏳ Pending</span>';
+    return `<div class="notif-row">
+      <div class="notif-info">
+        <div class="notif-user">@${d.userName || d.userId} <span style="font-weight:400;font-size:10px;color:var(--sub);">(${d.userId})</span></div>
+        <div class="notif-sub">Amount: <strong style="color:var(--ton);">${d.amount || '?'}</strong> · ${ts}</div>
+        <div class="notif-addr">💼 ${d.walletAddress || '—'}</div>
+      </div>
+      <div class="notif-actions">
+        ${statusChip}
+        ${d.status !== 'done' ? `<button class="btn-act green" onclick="confirmDeposit('${d.docId}','${d.userId}',${parseFloat(d.amount)||0})">✅ Confirm</button>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.confirmDeposit = async function(docId, userId, amount) {
+  if (!confirm(`Confirm deposit of ${amount} TON for user ${userId}?`)) return;
+  try {
+    await updateDoc(doc(db, 'depositNotifications', docId), { status: 'done', processedAt: serverTimestamp() });
+    // Also update the deposit doc and user balance
+    const depositsSnap = await getDocs(query(
+      collection(db, 'deposits'),
+      where('userId', '==', userId),
+      where('status', '==', 'pending'),
+      limit(5)
+    ));
+    for (const d of depositsSnap.docs) {
+      const da = d.data();
+      if (Math.abs((da.amount || 0) - amount) < 0.001) {
+        await updateDoc(doc(db, 'deposits', d.id), { status: 'active', activatedAt: serverTimestamp() });
+        // Add to user balance and totalDeposited
+        const userSnap = await getDoc(doc(db, 'users', userId));
+        if (userSnap.exists()) {
+          const ud = userSnap.data();
+          await updateDoc(doc(db, 'users', userId), {
+            balance: parseFloat(((ud.balance || 0) + amount).toFixed(6)),
+            totalDeposited: parseFloat(((ud.totalDeposited || 0) + amount).toFixed(6)),
+            withdrawUnlocked: true
+          });
+        }
+        break;
+      }
+    }
+    showToast('✅ Deposit confirmed!');
+    await loadDeposits(); await loadPlayers();
+  } catch(e) { showToast('❌ ' + e.message); }
+};
+
+// ── Withdrawals ──
+async function loadWithdrawals() {
+  const list = document.getElementById('withdrawal-list');
+  list.innerHTML = '<div class="empty-state"><div class="spinner"></div></div>';
+  try {
+    const snap = await getDocs(query(collection(db, 'withdrawals'), orderBy('createdAt', 'desc'), limit(100)));
+    const docs = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
+    if (!docs.length) { list.innerHTML = '<div class="empty-state"><div class="emoji">✅</div>No withdrawal requests</div>'; return; }
+    document.getElementById('s-withdrawals').textContent = docs.filter(d => d.status === 'pending').length;
+    list.innerHTML = docs.map(d => {
+      const ts = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleString() : '—';
+      const isPending = d.status === 'pending';
+      const isCancelled = d.status === 'cancelled';
+
+      let statusChip = '';
+      if (d.status === 'done') statusChip = '<span class="chip done">✅ Paid</span>';
+      else if (isCancelled) statusChip = '<span class="chip red">❌ Cancelled</span>';
+      else statusChip = '<span class="chip pending">⏳ Pending</span>';
+
+      // Deposit breakdown
+      let depHtml = '';
+      const deps = d.selectedDeposits || [];
+      if (deps.length) {
+        depHtml = `<div style="margin-top:5px;display:flex;flex-wrap:wrap;gap:4px;">`;
+        deps.forEach(dep => {
+          const rate = (dep.originalAmount || dep.amount || 0) >= 100 ? '15%' : '10%';
+          depHtml += `<span style="background:rgba(33,150,243,0.1);border:1px solid rgba(33,150,243,0.25);border-radius:6px;padding:2px 7px;font-size:10px;font-weight:700;color:var(--ton);">Deposit #${dep.idx}: ${(dep.amount||0).toFixed(2)} TON (${rate})</span>`;
+        });
+        depHtml += `</div>`;
+      }
+
+      const confirmBtn = `<button class="btn-act green" style="padding:7px 14px;font-size:11px;" onclick="adminConfirmWithdrawal('${d.docId}','${d.userId}')">
+        ✅ Confirm &amp; Deduct
+      </button>`;
+      const cancelBtn = `<button class="btn-act red" style="padding:7px 14px;font-size:11px;" onclick="adminCancelWithdrawal('${d.docId}','${d.userId}')">
+        ❌ Cancel
+      </button>`;
+
+      return `<div class="notif-row" style="${isPending ? 'background:linear-gradient(90deg,rgba(245,158,11,0.04),transparent);border-left:3px solid var(--gold);' : ''}">
+        <div class="notif-info" style="flex:1;">
+          <div class="notif-user" style="display:flex;align-items:center;gap:8px;">
+            @${d.userName || d.userId}
+            <span style="font-weight:400;font-size:10px;color:var(--sub);">(${d.userId})</span>
+            ${statusChip}
+          </div>
+          <div class="notif-sub" style="margin-top:4px;">
+            <strong style="color:var(--gold2);font-size:13px;">${(d.amount || 0).toFixed(2)} TON</strong>
+            <span style="color:var(--muted);"> · ${ts}</span>
+          </div>
+          <div class="notif-addr" style="margin-top:3px;">📤 <span onclick="navigator.clipboard?.writeText('${d.walletAddress||''}')" style="cursor:pointer;" title="Click to copy">${d.walletAddress || '—'}</span></div>
+          ${depHtml}
+        </div>
+        ${isPending ? `<div class="notif-actions" style="flex-direction:column;gap:6px;align-items:stretch;min-width:140px;">${confirmBtn}${cancelBtn}</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) { list.innerHTML = `<div class="empty-state"><div style="color:var(--red);">${e.message}</div></div>`; }
+}
+
+window.adminConfirmWithdrawal = async function(docId, userId) {
+  if (!confirm('Confirm this withdrawal and deduct balance?')) return;
+  try {
+    const wdSnap = await getDoc(doc(db, 'withdrawals', docId));
+    if (!wdSnap.exists()) { showToast('❌ Not found'); return; }
+    const wd = wdSnap.data();
+    if (wd.status !== 'pending') { showToast('Already processed'); await loadWithdrawals(); return; }
+
+    // 1. Mark done
+    await updateDoc(doc(db, 'withdrawals', docId), { status: 'done', confirmedAt: serverTimestamp() });
+
+    // 2. Deduct user balance
+    const userSnap = await getDoc(doc(db, 'users', userId));
+    let newBal = 0;
+    if (userSnap.exists()) {
+      const ud = userSnap.data();
+      newBal = Math.max(0, parseFloat(((ud.balance || 0) - (wd.amount || 0)).toFixed(6)));
+      await updateDoc(doc(db, 'users', userId), { balance: newBal });
+    }
+
+    // 3. Deduct from deposit cards
+    const selectedDeposits = wd.selectedDeposits || [];
+    for (const dep of selectedDeposits) {
+      if (!dep.id) continue;
+      try {
+        const depRef = doc(db, 'users', userId, 'deposits', dep.id);
+        const depSnap = await getDoc(depRef);
+        if (depSnap.exists()) {
+          const depData = depSnap.data();
+          const remainingAmt = parseFloat(((depData.amount || 0) - dep.amount).toFixed(6));
+          if (remainingAmt <= 0.001) {
+            await updateDoc(depRef, { status: 'withdrawn', amount: 0, withdrawnAt: serverTimestamp() });
+          } else {
+            await updateDoc(depRef, { amount: remainingAmt });
+          }
+        }
+      } catch(e2) { console.warn('Deposit update error:', e2); }
+    }
+
+    // 4. Notify user
+    const numericId = parseInt(userId);
+    if (!isNaN(numericId) && numericId > 0) {
+      await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: numericId, parse_mode: 'HTML',
+          text: `✅ <b>Withdrawal Confirmed!</b>\n\n💰 <b>${(wd.amount||0).toFixed(2)} TON</b> has been sent to:\n<code>${wd.walletAddress}</code>\n\n📊 Your new balance: <b>${newBal.toFixed(4)} TON</b>`
+        })
+      });
+    }
+
+    showToast(`✅ Confirmed! New balance: ${newBal.toFixed(4)} TON`);
+    await loadWithdrawals(); await loadPlayers();
+  } catch(e) { showToast('❌ ' + e.message); }
+};
+
+window.adminCancelWithdrawal = async function(docId, userId) {
+  if (!confirm('Cancel this withdrawal request?')) return;
+  try {
+    const wdSnap = await getDoc(doc(db, 'withdrawals', docId));
+    if (!wdSnap.exists()) { showToast('❌ Not found'); return; }
+    const wd = wdSnap.data();
+    await updateDoc(doc(db, 'withdrawals', docId), { status: 'cancelled', cancelledAt: serverTimestamp() });
+
+    // Notify user
+    const numericId = parseInt(userId);
+    if (!isNaN(numericId) && numericId > 0) {
+      await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          chat_id: numericId, parse_mode: 'HTML',
+          text: `❌ <b>Withdrawal Rejected</b>\n\nYour withdrawal request of <b>${(wd.amount||0).toFixed(2)} TON</b> was cancelled by the admin. Please contact support if you have questions.`
+        })
+      });
+    }
+
+    showToast('❌ Withdrawal cancelled');
+    await loadWithdrawals();
+  } catch(e) { showToast('❌ ' + e.message); }
+};
+
+// ── Settings / Milestones ──
+let referralMilestonesAdmin = [
+  { friends: 5, stars: 30 },
+  { friends: 10, stars: 60 },
+  { friends: 25, stars: 150 },
+  { friends: 50, stars: 500, bonusTon: 5 }
+];
+
+async function loadSettings() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'global'));
+    if (snap.exists()) {
+      const d = snap.data();
+      if (d.referralBonus != null) document.getElementById('ref-bonus-ton').value = d.referralBonus;
+      if (d.yieldRate != null) document.getElementById('yield-rate').value = d.yieldRate;
+      if (d.referralMilestones?.length) referralMilestonesAdmin = d.referralMilestones;
+    }
+  } catch(e) {}
+  renderMilestonesEditor();
+}
+
+function syncMilestonesFromDOM() {
+  // Read current input values back into the array before any re-render
+  referralMilestonesAdmin = referralMilestonesAdmin.map((_, i) => ({
+    friends:  parseInt(document.getElementById(`ms-friends-${i}`)?.value)  || 0,
+    stars:    parseInt(document.getElementById(`ms-stars-${i}`)?.value)    || 0,
+    bonusTon: parseFloat(document.getElementById(`ms-ton-${i}`)?.value)    || 0
+  }));
+}
+
+function renderMilestonesEditor() {
+  const c = document.getElementById('ref-milestones-editor');
+  const total = referralMilestonesAdmin.length;
+  c.innerHTML = referralMilestonesAdmin.map((m, i) => `
+    <div class="ms-card" id="ms-card-${i}" draggable="true"
+      ondragstart="msDragStart(event,${i})"
+      ondragover="msDragOver(event)"
+      ondrop="msDrop(event,${i})"
+      ondragend="msDragEnd()"
+      style="cursor:grab;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <!-- drag handle -->
+          <div title="Drag to reorder" style="color:var(--muted);font-size:16px;line-height:1;cursor:grab;user-select:none;">⠿</div>
+          <div style="font-size:10px;font-weight:800;color:var(--gold2);letter-spacing:.4px;">MILESTONE ${i + 1}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;">
+          <!-- up/down buttons -->
+          <button class="btn-act blue" style="padding:3px 8px;font-size:11px;" ${i === 0 ? 'disabled style="opacity:.35;padding:3px 8px;font-size:11px;"' : ''} onclick="moveMilestone(${i},-1)">▲</button>
+          <button class="btn-act blue" style="padding:3px 8px;font-size:11px;" ${i === total-1 ? 'disabled style="opacity:.35;padding:3px 8px;font-size:11px;"' : ''} onclick="moveMilestone(${i},1)">▼</button>
+          ${total > 1 ? `<button class="btn-act red" style="padding:3px 8px;font-size:10px;" onclick="removeMilestone(${i})">✕</button>` : ''}
+        </div>
+      </div>
+      <div class="ms-grid">
+        <div><label class="set-label">Friends Needed</label><input class="set-input" type="number" min="1" id="ms-friends-${i}" value="${m.friends}" placeholder="10"></div>
+        <div><label class="set-label">TG Stars Reward</label><input class="set-input" type="number" min="0" id="ms-stars-${i}" value="${m.stars || 0}" placeholder="60"></div>
+        <div><label class="set-label">Bonus TON (optional)</label><input class="set-input" type="number" min="0" step="0.1" id="ms-ton-${i}" value="${m.bonusTon || 0}" placeholder="0"></div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── Drag-and-drop reorder ──
+let msDragIdx = null;
+
+window.msDragStart = function(e, i) {
+  syncMilestonesFromDOM();
+  msDragIdx = i;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(() => document.getElementById(`ms-card-${i}`)?.style && (document.getElementById(`ms-card-${i}`).style.opacity = '0.45'), 0);
+};
+window.msDragOver = function(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  // highlight drop target
+  const card = e.currentTarget;
+  document.querySelectorAll('.ms-card').forEach(c => c.classList.remove('drag-over'));
+  if (card) card.classList.add('drag-over');
+};
+window.msDrop = function(e, targetIdx) {
+  e.preventDefault();
+  document.querySelectorAll('.ms-card').forEach(c => c.classList.remove('drag-over'));
+  if (msDragIdx === null || msDragIdx === targetIdx) return;
+  const moved = referralMilestonesAdmin.splice(msDragIdx, 1)[0];
+  referralMilestonesAdmin.splice(targetIdx, 0, moved);
+  msDragIdx = null;
+  renderMilestonesEditor();
+};
+window.msDragEnd = function() {
+  document.querySelectorAll('.ms-card').forEach(c => c.classList.remove('drag-over'));
+  msDragIdx = null;
+  renderMilestonesEditor();
+};
+
+// ── Arrow button reorder ──
+window.moveMilestone = function(i, dir) {
+  syncMilestonesFromDOM();
+  const j = i + dir;
+  if (j < 0 || j >= referralMilestonesAdmin.length) return;
+  [referralMilestonesAdmin[i], referralMilestonesAdmin[j]] = [referralMilestonesAdmin[j], referralMilestonesAdmin[i]];
+  renderMilestonesEditor();
+};
+
+window.addMilestone = function() {
+  syncMilestonesFromDOM();
+  referralMilestonesAdmin.push({ friends: 0, stars: 0, bonusTon: 0 });
+  renderMilestonesEditor();
+  // Scroll to the new card
+  setTimeout(() => {
+    const last = document.getElementById(`ms-card-${referralMilestonesAdmin.length - 1}`);
+    last?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 50);
+};
+window.removeMilestone = function(i) {
+  syncMilestonesFromDOM();
+  referralMilestonesAdmin.splice(i, 1);
+  renderMilestonesEditor();
+};
+
+window.saveSettings = async function() {
+  const msg = document.getElementById('settings-msg');
+  msg.textContent = 'Saving…';
+  // Sync inputs → array, then save in the current admin-defined order (no auto-sort)
+  syncMilestonesFromDOM();
+  const ms = referralMilestonesAdmin;
+  const refBonus = parseFloat(document.getElementById('ref-bonus-ton').value) || 0.05;
+  const yieldRate = parseFloat(document.getElementById('yield-rate').value) || 10;
+  try {
+    await setDoc(doc(db, 'settings', 'global'), {
+      referralBonus: refBonus,
+      yieldRate,
+      referralMilestones: ms,
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+    referralMilestonesAdmin = ms;
+    msg.textContent = '✅ Saved!';
+    setTimeout(() => msg.textContent = '', 2500);
+    showToast('✅ Settings saved!');
+  } catch(e) { msg.textContent = '❌ ' + e.message; }
+};
+
+// ── Player actions ──
+let modalAction = null;
+function openModal(title, body, action) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML = body;
+  modalAction = action;
+  document.getElementById('modal-bg').classList.add('open');
+}
+function closeModal() { document.getElementById('modal-bg').classList.remove('open'); modalAction = null; }
+document.getElementById('modal-cancel').addEventListener('click', closeModal);
+document.getElementById('modal-confirm').addEventListener('click', async () => { if (modalAction) await modalAction(); closeModal(); });
+document.getElementById('modal-bg').addEventListener('click', e => { if (e.target === document.getElementById('modal-bg')) closeModal(); });
+
+window.editBalance = function(uid, name, currentBal) {
+  openModal(`✏️ Edit Balance — @${name}`,
+    `<div class="modal-field"><label class="modal-label">Current: ${parseFloat(currentBal).toFixed(4)} TON</label><input class="modal-input" id="m-bal" type="number" step="0.0001" value="${parseFloat(currentBal).toFixed(4)}" placeholder="New balance"></div>`,
+    async () => {
+      const val = parseFloat(document.getElementById('m-bal').value);
+      if (isNaN(val) || val < 0) { showToast('❌ Invalid'); return; }
+      await updateDoc(doc(db, 'users', uid), { balance: val });
+      showToast(`✅ Balance set to ${val.toFixed(4)} TON`); await loadPlayers();
+    }
+  );
+};
+
+window.addDeposit = function(uid, name) {
+  openModal(`💰 Add Deposit — @${name}`,
+    `<div class="modal-field"><label class="modal-label">Deposit Amount (TON)</label><input class="modal-input" id="m-dep" type="number" step="0.01" min="0.5" placeholder="e.g. 10"></div>
+     <div style="font-size:11px;color:var(--sub);margin-top:6px;line-height:1.5;">This will add the amount to the user's balance AND totalDeposited. A deposit record will be created.</div>`,
+    async () => {
+      const amt = parseFloat(document.getElementById('m-dep').value);
+      if (isNaN(amt) || amt < 0.5) { showToast('❌ Min 0.5 TON'); return; }
+      const userSnap = await getDoc(doc(db, 'users', uid));
+      if (!userSnap.exists()) { showToast('❌ User not found'); return; }
+      const ud = userSnap.data();
+      await updateDoc(doc(db, 'users', uid), {
+        balance: parseFloat(((ud.balance || 0) + amt).toFixed(6)),
+        totalDeposited: parseFloat(((ud.totalDeposited || 0) + amt).toFixed(6)),
+        withdrawUnlocked: true
+      });
+      await addDoc(collection(db, 'deposits'), {
+        userId: uid,
+        userName: ud.userName || '',
+        displayName: ud.displayName || '',
+        amount: amt,
+        walletAddress: ud.walletAddress || '',
+        status: 'active',
+        weeksActive: 0,
+        earned: 0,
+        addedByAdmin: true,
+        createdAt: serverTimestamp()
+      });
+      showToast(`✅ Added ${amt} TON deposit for @${name}`); await loadPlayers();
+    }
+  );
+};
+
+window.toggleWithdraw = function(uid, name, currentlyUnlocked) {
+  const newVal = !currentlyUnlocked;
+  openModal(`${newVal ? '🔓 Unlock' : '🔒 Lock'} Withdraw — @${name}`,
+    `<div style="font-size:12px;color:var(--sub);line-height:1.6;">${newVal ? 'This will <strong style="color:var(--green);">unlock</strong>' : 'This will <strong style="color:var(--red);">lock</strong>'} withdrawals for <strong>@${name}</strong>.</div>`,
+    async () => {
+      await updateDoc(doc(db, 'users', uid), { withdrawUnlocked: newVal });
+      showToast(newVal ? '🔓 Unlocked!' : '🔒 Locked!'); await loadPlayers();
+    }
+  );
+};
+
+window.deletePlayer = function(uid, name) {
+  openModal(`🗑️ Delete Player — @${name}`,
+    `<div style="font-size:12px;color:var(--red);line-height:1.6;"><strong>⚠️ Warning:</strong> Permanently deletes @${name}. Cannot be undone!</div>`,
+    async () => {
+      await deleteDoc(doc(db, 'users', uid));
+      showToast(`🗑️ Deleted @${name}`);
+      allPlayers = allPlayers.filter(p => p.id !== uid);
+      renderPlayers(allPlayers); updateSummary();
+    }
+  );
+};
+
+// ── Add player ──
+let npWd = false;
+window.toggleNpWd = function() {
+  npWd = !npWd;
+  const btn = document.getElementById('np-wd-toggle');
+  if (npWd) { btn.textContent = '🔓 Unlocked'; btn.style.background = 'var(--green-light)'; btn.style.borderColor = 'rgba(16,185,129,0.3)'; btn.style.color = 'var(--green)'; }
+  else { btn.textContent = '🔒 Locked'; btn.style.background = 'var(--red-light)'; btn.style.borderColor = 'rgba(239,68,68,0.25)'; btn.style.color = 'var(--red)'; }
+};
+
+window.createNewPlayer = async function() {
+  const err = document.getElementById('np-error');
+  err.textContent = '';
+  const userId = document.getElementById('np-userid').value.trim();
+  const userName = document.getElementById('np-username').value.trim();
+  const displayName = document.getElementById('np-displayname').value.trim();
+  const balance = parseFloat(document.getElementById('np-balance').value) || 0;
+  const totalDeposited = parseFloat(document.getElementById('np-deposited').value) || 0;
+  const wallet = document.getElementById('np-wallet').value.trim();
+  if (!userId) { err.textContent = '❌ Telegram User ID is required'; return; }
+  if (!userName) { err.textContent = '❌ Username is required'; return; }
+  const code = userId.slice(-6).toUpperCase() + Math.random().toString(36).slice(-2).toUpperCase();
+  try {
+    await setDoc(doc(db, 'users', userId), {
+      userId, userName, displayName: displayName || userName,
+      balance, totalDeposited, totalEarned: 0,
+      walletAddress: wallet,
+      referralCode: code, referredBy: null,
+      referralCount: 0, referralEarned: 0,
+      withdrawUnlocked: npWd,
+      createdAt: serverTimestamp()
+    });
+    showToast('✅ Player @' + userName + ' created!');
+    ['np-userid','np-username','np-displayname','np-wallet'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('np-balance').value = '0';
+    document.getElementById('np-deposited').value = '0';
+    npWd = false; window.toggleNpWd(); window.toggleNpWd();
+    await loadPlayers();
+  } catch(e) { err.textContent = '❌ ' + e.message; }
+};
+
+// ── Tab switch ──
+window.switchAdminTab = function(name, btn) {
+  document.querySelectorAll('.atab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.atab').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+};
+
+// ── Refresh buttons ──
+document.getElementById('refresh-players').addEventListener('click', loadPlayers);
+document.getElementById('refresh-deposits').addEventListener('click', loadDeposits);
+document.getElementById('refresh-withdrawals').addEventListener('click', loadWithdrawals);
+
+// ── DM (direct message to single user) ──
+window.openDM = function(uid, userName) {
+  openModal(`📨 Send DM — @${userName}`,
+    `<div class="modal-field">
+      <label class="modal-label">Message (HTML supported)</label>
+      <textarea class="dm-textarea" id="dm-text" placeholder="Write your message…
+<b>bold</b>, <i>italic</i>, <a href='...'>link</a>"></textarea>
+    </div>
+    <div style="font-size:10px;color:var(--sub);margin-top:-6px;">Sends directly to this user's Telegram chat.</div>`,
+    async () => {
+      const text = document.getElementById('dm-text')?.value?.trim();
+      if (!text) { showToast('❌ Message is empty'); return; }
+      const BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
+      try {
+        const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: uid, text, parse_mode: 'HTML' })
+        });
+        const json = await res.json();
+        if (json.ok) {
+          showToast(`✅ Message sent to @${userName}!`);
+        } else {
+          showToast(`❌ Failed: ${json.description}`);
+        }
+      } catch(e) { showToast('❌ ' + e.message); }
+    }
+  );
+};
+
+// ── Broadcast ──
+let bcPhotoBase64 = null;
+let bcPhotoMime = null;
+let allUserIds = [];
+
+async function loadBroadcastCount() {
+  try {
+    const snap = await getDocs(collection(db, 'users'));
+    allUserIds = snap.docs.map(d => ({
+      id: d.data().userId || d.id,
+      lang: d.data().lang || 'en'
+    })).filter(u => u.id);
+    document.getElementById('bc-user-count').textContent = allUserIds.length + ' users';
+  } catch(e) { document.getElementById('bc-user-count').textContent = '? (error)'; }
+}
+
+window.handleBcPhoto = function(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const dataUrl = e.target.result;
+    bcPhotoMime = file.type;
+    bcPhotoBase64 = dataUrl.split(',')[1];
+    document.getElementById('bc-photo-label').style.display = 'none';
+    const img = document.getElementById('bc-photo-img');
+    img.src = dataUrl; img.style.display = 'block';
+    document.getElementById('bc-remove-photo').style.display = '';
+  };
+  reader.readAsDataURL(file);
+};
+
+window.removeBcPhoto = function() {
+  bcPhotoBase64 = null; bcPhotoMime = null;
+  document.getElementById('bc-photo').value = '';
+  document.getElementById('bc-photo-img').style.display = 'none';
+  document.getElementById('bc-photo-label').style.display = '';
+  document.getElementById('bc-remove-photo').style.display = 'none';
+};
+
+window.sendBroadcast = async function() {
+  const textEn = document.getElementById('bc-text-en').value.trim();
+  const textRu = document.getElementById('bc-text-ru').value.trim();
+  if (!textEn) { showToast('❌ English message is required'); return; }
+  if (!allUserIds.length) { showToast('❌ No users loaded — click Refresh count first'); return; }
+
+  const ruCount = allUserIds.filter(u => (u.lang || 'ru') === 'ru').length;
+  const enCount = allUserIds.length - ruCount;
+  const hasRu = !!textRu;
+  const confirmMsg = hasRu
+    ? `Send to ${allUserIds.length} users?\n🇬🇧 English → ${enCount} users\n🇷🇺 Russian → ${ruCount} users`
+    : `Send Russian message to all ${allUserIds.length} users? (No English-only fallback)`;
+  if (!confirm(confirmMsg)) return;
+
+  const btn = document.getElementById('bc-send-btn');
+  btn.disabled = true; btn.textContent = '⏳ Sending…';
+  const progress = document.getElementById('bc-progress');
+  const progressBar = document.getElementById('bc-progress-bar');
+  const progressLabel = document.getElementById('bc-progress-label');
+  const progressDetail = document.getElementById('bc-progress-detail');
+  const result = document.getElementById('bc-result');
+  progress.style.display = 'block'; result.textContent = '';
+
+  const BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
+  let sent = 0, failed = 0;
+
+  for (let i = 0; i < allUserIds.length; i++) {
+    const user = allUserIds[i];
+    const chatId = user.id;
+    // Pick message based on user language; fallback to English if no RU text
+    // Default to Russian if no lang set (most users are Ukrainian/Russian speakers)
+    const userLang = user.lang || 'ru';
+    const text = (hasRu && userLang === 'ru') ? textRu : textEn;
+    const pct = Math.round(((i + 1) / allUserIds.length) * 100);
+    progressBar.style.width = pct + '%';
+    progressLabel.textContent = `Sending… ${i + 1} / ${allUserIds.length} (${userLang === 'ru' ? '🇷🇺 RU' : '🇬🇧 EN'})`;
+    progressDetail.textContent = `✅ ${sent} sent · ❌ ${failed} failed`;
+
+    try {
+      let res;
+      if (bcPhotoBase64 && bcPhotoMime) {
+        // Convert base64 → Blob for FormData
+        const byteChars = atob(bcPhotoBase64);
+        const byteArr = new Uint8Array(byteChars.length);
+        for (let b = 0; b < byteChars.length; b++) byteArr[b] = byteChars.charCodeAt(b);
+        const blob = new Blob([byteArr], { type: bcPhotoMime });
+        const fd = new FormData();
+        fd.append('chat_id', chatId);
+        fd.append('photo', blob, 'photo.jpg');
+        fd.append('caption', text);
+        fd.append('parse_mode', 'HTML');
+        res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendPhoto`, { method: 'POST', body: fd });
+      } else {
+        res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: chatId, text, parse_mode: 'HTML' })
+        });
+      }
+      const json = await res.json();
+      if (json.ok) sent++; else failed++;
+    } catch(e) { failed++; }
+
+    // Small delay to avoid Telegram rate limit (30 msg/sec)
+    if ((i + 1) % 25 === 0) await new Promise(r => setTimeout(r, 1100));
+  }
+
+  progressLabel.textContent = '✅ Done!';
+  progressBar.style.width = '100%';
+  const ruSent = allUserIds.filter(u => (u.lang || 'ru') === 'ru').length;
+  const langNote = hasRu ? ` <span style="font-size:10px;color:var(--sub);">(${allUserIds.length - ruSent} 🇬🇧 + ${ruSent} 🇷🇺)</span>` : '';
+  result.innerHTML = `<span style="color:var(--green);font-weight:700;">✅ Sent: ${sent}</span>${langNote} &nbsp; <span style="color:var(--red);font-weight:700;">❌ Failed: ${failed}</span>`;
+  btn.disabled = false; btn.textContent = '📢 Send Broadcast';
+  showToast(`✅ Broadcast done! ${sent} sent, ${failed} failed`);
+};
+
+// Auto-load count when broadcast tab opens
+const _origSwitchAdminTab = window.switchAdminTab;
+window.switchAdminTab = function(name, btn) {
+  _origSwitchAdminTab(name, btn);
+  if (name === 'broadcast' && !allUserIds.length) loadBroadcastCount();
+};
+
+// ── Toast ──
+window.showToast = function(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+};
+
+// ════════════════════════════════════════════════════════════
+// ── Telegram Callback Query Poller (Withdrawal Confirm/Cancel)
+// ════════════════════════════════════════════════════════════
+const CB_BOT_TOKEN = '8681109703:AAEEPc3hw3iniKA7GH3uMk47l5ace__hxgU';
+let cbLastUpdateId = 0;
+let cbPolling = false;
+
+async function pollCallbackQueries() {
+  if (!document.getElementById('admin-app')?.classList.contains('visible')) return;
+  try {
+    const url = `https://api.telegram.org/bot${CB_BOT_TOKEN}/getUpdates?offset=${cbLastUpdateId + 1}&timeout=5&allowed_updates=["callback_query"]`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!data.ok || !data.result?.length) return;
+    for (const update of data.result) {
+      cbLastUpdateId = update.update_id;
+      const cq = update.callback_query;
+      if (!cq) continue;
+      const cbData = cq.data || '';
+      const msgId  = cq.message?.message_id;
+      const chatId = cq.message?.chat?.id;
+
+      if (cbData.startsWith('wd_confirm_') || cbData.startsWith('wd_cancel_')) {
+        await handleWithdrawalCallback(cbData, cq.id, msgId, chatId);
+      }
+    }
+  } catch(e) { console.warn('CB poll error:', e); }
+}
+
+async function handleWithdrawalCallback(cbData, queryId, msgId, chatId) {
+  // callback_data format: wd_confirm_{wdDocId}_{userId}  or  wd_cancel_{wdDocId}_{userId}
+  const parts = cbData.split('_');
+  // parts: ['wd', 'confirm'|'cancel', wdDocId, userId]
+  // wdDocId might contain underscores itself, so join from index 2 up to last
+  const action = parts[1]; // 'confirm' or 'cancel'
+  const userId = parts[parts.length - 1];
+  const wdDocId = parts.slice(2, parts.length - 1).join('_');
+
+  try {
+    const wdSnap = await getDoc(doc(db, 'withdrawals', wdDocId));
+    if (!wdSnap.exists()) {
+      await answerCbQuery(queryId, '❌ Withdrawal not found');
+      return;
+    }
+    const wd = wdSnap.data();
+    if (wd.status !== 'pending') {
+      await answerCbQuery(queryId, `Already ${wd.status}`);
+      await editBotMessage(chatId, msgId, `✅ Already processed (${wd.status})`, null);
+      return;
+    }
+
+    if (action === 'confirm') {
+      // 1. Mark withdrawal as done
+      await updateDoc(doc(db, 'withdrawals', wdDocId), { status: 'done', confirmedAt: serverTimestamp() });
+
+      // 2. Deduct amount from user balance
+      const userSnap = await getDoc(doc(db, 'users', userId));
+      let newBal = 0;
+      if (userSnap.exists()) {
+        const ud = userSnap.data();
+        newBal = Math.max(0, parseFloat(((ud.balance || 0) - (wd.amount || 0)).toFixed(6)));
+        await updateDoc(doc(db, 'users', userId), { balance: newBal });
+      }
+
+      // 3. Deduct from selected deposit cards (zero them out or reduce amount)
+      const selectedDeposits = wd.selectedDeposits || [];
+      for (const dep of selectedDeposits) {
+        if (!dep.id) continue;
+        try {
+          const depRef = doc(db, 'users', userId, 'deposits', dep.id);
+          const depSnap = await getDoc(depRef);
+          if (depSnap.exists()) {
+            // If the deposit amount equals the withdrawal portion, close it; else reduce
+            const depData = depSnap.data();
+            const remainingAmt = parseFloat(((depData.amount || 0) - dep.amount).toFixed(6));
+            if (remainingAmt <= 0.001) {
+              await updateDoc(depRef, { status: 'withdrawn', amount: 0, withdrawnAt: serverTimestamp() });
+            } else {
+              await updateDoc(depRef, { amount: remainingAmt });
+            }
+          }
+        } catch(e2) { console.warn('Deposit update error:', e2); }
+      }
+
+      // 4. Answer + edit the bot message
+      await answerCbQuery(queryId, '✅ Confirmed & balance deducted!');
+      const depSummary = selectedDeposits.length
+        ? `\n💳 Deducted from: ${selectedDeposits.map(d=>'#'+d.idx).join(', ')}`
+        : '';
+      await editBotMessage(chatId, msgId,
+        `✅ <b>CONFIRMED</b> — ${wd.amount?.toFixed(2)} TON sent to:\n<code>${wd.walletAddress}</code>` +
+        `\n👤 @${wd.userName || userId}` +
+        depSummary +
+        `\n📊 New balance: ${newBal.toFixed(4)} TON`, null);
+
+      // 5. Notify user
+      const numericId = parseInt(userId);
+      if (!isNaN(numericId) && numericId > 0) {
+        await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: numericId,
+            parse_mode: 'HTML',
+            text: `✅ <b>Withdrawal Confirmed!</b>\n\n💰 <b>${(wd.amount||0).toFixed(2)} TON</b> has been sent to:\n<code>${wd.walletAddress}</code>\n\n📊 Your new balance: <b>${newBal.toFixed(4)} TON</b>`
+          })
+        });
+      }
+
+      showToast(`✅ Confirmed withdrawal for @${wd.userName || userId}`);
+      await loadWithdrawals();
+
+    } else if (action === 'cancel') {
+      await updateDoc(doc(db, 'withdrawals', wdDocId), { status: 'cancelled', cancelledAt: serverTimestamp() });
+      await answerCbQuery(queryId, '❌ Withdrawal cancelled');
+      await editBotMessage(chatId, msgId,
+        `❌ <b>CANCELLED</b> — Withdrawal of ${wd.amount?.toFixed(2)} TON for @${wd.userName || userId} was rejected.`, null);
+
+      // Notify user of cancellation
+      const numericId = parseInt(userId);
+      if (!isNaN(numericId) && numericId > 0) {
+        await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/sendMessage`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            chat_id: numericId,
+            parse_mode: 'HTML',
+            text: `❌ <b>Withdrawal Rejected</b>\n\nYour withdrawal request of <b>${(wd.amount||0).toFixed(2)} TON</b> was cancelled by the admin. Please contact support if you have questions.`
+          })
+        });
+      }
+
+      showToast(`❌ Cancelled withdrawal for @${wd.userName || userId}`);
+      await loadWithdrawals();
+    }
+  } catch(e) {
+    console.error('handleWithdrawalCallback error:', e);
+    await answerCbQuery(queryId, '⚠️ Error processing request');
+  }
+}
+
+async function answerCbQuery(queryId, text) {
+  try {
+    await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/answerCallbackQuery`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ callback_query_id: queryId, text, show_alert: true })
+    });
+  } catch(e) {}
+}
+
+async function editBotMessage(chatId, messageId, text, replyMarkup) {
+  try {
+    await fetch(`https://api.telegram.org/bot${CB_BOT_TOKEN}/editMessageText`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        chat_id: chatId, message_id: messageId,
+        text, parse_mode: 'HTML',
+        reply_markup: replyMarkup || { inline_keyboard: [] }
+      })
+    });
+  } catch(e) {}
+}
+
+// Start polling when admin is logged in — check every 4 seconds
+const _origLoadPlayers = window.loadPlayers || (() => {});
+(function startCbPolling() {
+  setInterval(async () => {
+    if (document.getElementById('admin-app')?.classList.contains('visible')) {
+      await pollCallbackQueries();
+    }
+  }, 4000);
+})();
+</script>
+</body>
+</html>
